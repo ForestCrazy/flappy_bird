@@ -1,6 +1,10 @@
 import pygame
 from pygame.locals import *
+from tkinter import *
+from tkinter import messagebox
+from tkinter import font
 import random
+import os.path
 
 pygame.init()
 
@@ -8,7 +12,7 @@ clock = pygame.time.Clock()
 fps = 60
 
 screen_width = 864
-screen_height = 936
+screen_height = 800
 
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption('Flappy Bird')
@@ -18,18 +22,20 @@ font = pygame.font.SysFont('Bauhaus 93', 60)
 
 #define colours
 white = (255, 255, 255)
+dark = (0, 0, 0)
 
 #define game variables
 ground_scroll = 0
 scroll_speed = 4
 flying = False
 game_over = False
-pipe_gap = 150
+pipe_gap = 200
 pipe_frequency = 1500 #milliseconds
 last_pipe = pygame.time.get_ticks() - pipe_frequency
 score = 0
 pass_pipe = False
-
+font_def = pygame.font.SysFont("Angsana New",24)
+player_name = None
 
 #load images
 bg = pygame.image.load('img/bg.png')
@@ -49,6 +55,64 @@ def reset_game():
 	score = 0
 	return score
 
+def text_objects(text, font):
+    textSurface = font.render(text, True, dark)
+    return textSurface, textSurface.get_rect()
+
+def update_score(player_name, score):
+	current_score = 0
+	# if os.path.isfile('score.txt'):
+	# 	l = open('score.txt')
+	# 	open('score.txt', 'w').close()
+	# 	with open('score.txt', 'a') as f:
+	# 		for line in l:
+	# 			if not player_name in line:
+	# 				f.write(line)
+	# 			else:
+	# 				current_score = int(line.split(" ")[1])
+	# print(current_score)
+	# if score > current_score:
+	# 	if os.path.isfile('score.txt'):
+	# 		with open('score.txt', 'a') as f:
+	# 			f.write(player_name + " " + str(score) + "\n")
+	# 	else:
+	# 		with open('score.txt', 'w+') as f:
+	# 			f.write(player_name + ' ' + str(score) + '\n')
+	# else:
+	# 	if os.path.isfile('score.txt'):
+	# 		with open('score.txt', 'a') as f:
+	# 			f.write(player_name + " " + str(current_score) + "\n")
+	# 	else:
+	# 		with open('score.txt', 'w+') as f:
+	# 			f.write(player_name + ' ' + str(current_score) + '\n')
+	if os.path.isfile('score.txt'):
+		with open('score.txt', 'r', encoding="utf-8") as file:
+			# read a list of lines into data
+			data = file.readlines()
+
+		open('score.txt', 'w', encoding="utf-8").close()
+		with open('score.txt', 'a', encoding="utf-8") as f:
+			for line in data:
+				if not player_name in line:
+					f.write(line)
+				else:
+					current_score = int(line.split(" ")[1])
+		if score > current_score:
+			with open('score.txt', 'a', encoding="utf-8") as f:
+				f.write(player_name + " " + str(score) + "\n")
+		else:
+			with open('score.txt', 'a', encoding="utf-8") as f:
+				f.write(player_name + " " + str(current_score) + "\n")
+	else:
+		with open('score.txt', 'w+', encoding="utf-8") as f:
+			f.write(player_name + ' ' + str(score) + '\n')
+
+def get_score(player_name):
+	with open('score.txt', 'r', encoding="utf-8") as f:
+		for line in f:
+			if player_name in line:
+				return int(line.split(" ")[0])
+	return 0
 
 class Bird(pygame.sprite.Sprite):
 
@@ -148,7 +212,75 @@ class Button():
 
 		return action
 
+class ButtonHome():
+	def __init__(self, x, y, image, scale):
+		width = image.get_width()
+		height = image.get_height()
+		self.image = pygame.transform.scale(image, (int(width * scale), int(height * scale)))
+		self.rect = self.image.get_rect()
+		self.rect.topleft = (x, y)
+		self.clicked = False
 
+	def draw(self, surface):
+		action = False
+		#get mouse position
+		pos = pygame.mouse.get_pos()
+
+		#check mouseover and clicked conditions
+		if self.rect.collidepoint(pos):
+			if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
+				self.clicked = True
+				action = True
+
+		if pygame.mouse.get_pressed()[0] == 0:
+			self.clicked = False
+
+		#draw button on screen
+		surface.blit(self.image, (self.rect.x, self.rect.y))
+
+		return action
+
+class InputBox:
+
+    def __init__(self, x, y, w, h, text=''):
+        self.rect = pygame.Rect(x, y, w, h)
+        self.color = pygame.Color('lightskyblue3')
+        self.text = text
+        self.txt_surface = font_def.render(text, True, self.color)
+        self.active = False
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            # If the user clicked on the input_box rect.
+            if self.rect.collidepoint(event.pos):
+                # Toggle the active variable.
+                self.active = not self.active
+            else:
+                self.active = False
+            # Change the current color of the input box.
+            self.color = pygame.Color('dodgerblue2') if self.active else pygame.Color('lightskyblue3')
+        if event.type == pygame.KEYDOWN:
+            if self.active:
+                if event.key == pygame.K_RETURN:
+                    print(self.text)
+                    self.text = ''
+                elif event.key == pygame.K_BACKSPACE:
+                    self.text = self.text[:-1]
+                else:
+                    self.text += event.unicode
+                # Re-render the text.
+                self.txt_surface = font_def.render(self.text, True, self.color)
+
+    def update(self):
+        # Resize the box if the text is too long.
+        width = max(200, self.txt_surface.get_width()+10)
+        self.rect.w = width
+
+    def draw(self, screen):
+        # Blit the text.
+        screen.blit(self.txt_surface, (self.rect.x+5, self.rect.y+5))
+        # Blit the rect.
+        pygame.draw.rect(screen, self.color, self.rect, 2)
 
 pipe_group = pygame.sprite.Group()
 bird_group = pygame.sprite.Group()
@@ -157,12 +289,104 @@ flappy = Bird(100, int(screen_height / 2))
 
 bird_group.add(flappy)
 
+#load button images
+start_img = pygame.image.load('img/start_btn.png').convert_alpha()
+exit_img = pygame.image.load('img/exit_btn.png').convert_alpha()
+
 #create restart button instance
 button = Button(screen_width // 2 - 50, screen_height // 2 - 100, button_img)
-
+exit_button_game = ButtonHome(screen_width // 2 - 34, screen_height // 2 - 30, exit_img, 0.33)
 
 run = True
+home = True
 while run:
+
+	if home:
+		#create button instances
+		start_button = ButtonHome(screen_width // 2 - 250, screen_height // 2 - 100, start_img, 0.5)
+		exit_button = ButtonHome(screen_width // 2 + 100, screen_height // 2 - 100, exit_img, 0.5)
+		tx = int(screen_width // 2) - 50
+		ty = int(screen_height // 2)
+		input_box1 = InputBox(screen_width // 2 - 110, screen_height // 2 - 180, 140, 32)
+		input_boxes = [input_box1]
+		lvx = int(screen_width // 2) - 72
+		lvy = int(screen_height // 2) + 100
+		
+		#game loop
+		while home:
+
+			screen.fill((202, 228, 241))
+
+			if start_button.draw(screen):
+				player_name = input_box1.text
+				home = False
+				game_over = False
+				score = reset_game()
+			if exit_button.draw(screen):
+				exit()
+			
+			# rendering a text written in
+			# this font
+			text = pygame.font.SysFont("Angsana New",35).render('วิธีการเล่น', True, white)
+			pygame.draw.rect(screen, (170,170,170),[tx - 24,ty + 2,140,40])
+			screen.blit(text , (tx,ty))
+			listview = pygame.font.SysFont("Angsana New", 35).render('ประวัติการเล่น', True, white)
+			pygame.draw.rect(screen, (170,170,170),[lvx - 24,lvy + 2,185,45])
+			screen.blit(listview , (lvx,lvy))
+			draw_text("Insert Player Name", font_def, dark, screen_width // 2 - 110, screen_height // 2 - 210)
+			for box in input_boxes:
+				box.update()
+
+			for box in input_boxes:
+				box.draw(screen)
+			
+			#event handler
+			for event in pygame.event.get():
+				#quit game
+				if event.type == pygame.QUIT:
+					home = False
+					run = False
+				if event.type== pygame.MOUSEBUTTONDOWN and event.button == 1:
+					mouse=pygame.mouse.get_pos()
+					if mouse[0]in range ( tx-24,tx+130) and  mouse[1]in range ( ty-2,ty+80):
+						master = Tk()
+
+						w = Label(master, text="""> กดปุ่ม คลิ๊กซ้าย เพื่อให้ตัวละครกระโดด \n> คุณได้จะได้ 1 คะแนนต่อการผ่าน 1 ท่อ \n> เกมจะจบลงในเมื่อตัวละครตกพื้น หรือ ชนท่อ""", font=('Arial', 20))
+						w.pack()
+
+						mainloop()
+				if event.type== pygame.MOUSEBUTTONDOWN and event.button == 1:
+					mouse=pygame.mouse.get_pos()
+					if mouse[0]in range ( lvx-24,lvx+130) and  mouse[1]in range ( lvy-2,lvy+80):
+						# root = tk.Tk()
+						# mlb = treectrl.MultiListbox(root)
+						# mlb.pack(side='top', fill='both', expand=1)
+						# tk.Button(root, text='Close', command=root.quit).pack(side='top', pady=5)
+						# mlb.focus_set()
+						# mlb.configure(selectcmd=select_cmd, selectmode='extended')
+						# mlb.config(columns=('Column 1', 'Column 2'))
+						# if os.path.isfile('score.txt'):
+						# 	with open('score.txt', 'r') as f:
+						# 		for line in f:
+						# 			mlb.insert('end', line.split(" "))
+						root = Tk()
+						root.resizable(width=False, height=False)
+						root.geometry('{}x{}'.format(150, 400))
+						listbox = Listbox(root, width=140, height=400, font=('Angsana New', 20))
+						listbox.pack()
+						# box = tk.Listbox(root, selectmode=tk.MULTIPLE, height=4)
+						header = ["Name", "Score"]
+						listbox.insert('end', "{:<8} {:>8}".format(*header, sp=" " * 6))
+						if os.path.isfile('score.txt'):
+							with open('score.txt', 'r', encoding="utf-8") as f:
+								for line in f:
+									listbox.insert('end', "{:<8} {:>8}".format(*line.split(" "), sp=" " * 12))
+								# box.pack()
+						root.mainloop()
+				for box in input_boxes:
+					box.handle_event(event)
+
+			pygame.display.update()
 
 	clock.tick(fps)
 
@@ -202,7 +426,7 @@ while run:
 		#generate new pipes
 		time_now = pygame.time.get_ticks()
 		if time_now - last_pipe > pipe_frequency:
-			pipe_height = random.randint(-100, 100)
+			pipe_height = random.randint(-80, 80)
 			btm_pipe = Pipe(screen_width, int(screen_height / 2) + pipe_height, -1)
 			top_pipe = Pipe(screen_width, int(screen_height / 2) + pipe_height, 1)
 			pipe_group.add(btm_pipe)
@@ -219,8 +443,12 @@ while run:
 	#check for game over and reset
 	if game_over == True:
 		if button.draw():
+			update_score(player_name, score)
 			game_over = False
 			score = reset_game()
+		if exit_button_game.draw(screen):
+			update_score(player_name, score)
+			home = True
 
 
 	for event in pygame.event.get():
