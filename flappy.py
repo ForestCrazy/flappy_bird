@@ -329,7 +329,8 @@ while run:
 				game_over = False
 				score = reset_game()
 			if exit_button.draw(screen):
-				exit()
+				home = False
+				run = False
 			
 			text = pygame.font.SysFont("Angsana New",35).render('วิธีการเล่น', True, white)
 			pygame.draw.rect(screen, (170,170,170),[tx - 24,ty + 2,140,40])
