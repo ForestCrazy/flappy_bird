@@ -39,6 +39,8 @@ player_name = None
 
 #load images
 bg = pygame.image.load('img/bg.png')
+bg_home = pygame.image.load('img/bg_home.jpg')
+bg_home = pygame.transform.scale(bg_home, (screen_width, screen_height))
 ground_img = pygame.image.load('img/ground.png')
 button_img = pygame.image.load('img/restart.png')
 
@@ -311,7 +313,7 @@ while run:
 		exit_button = ButtonHome(screen_width // 2 + 100, screen_height // 2 - 100, exit_img, 0.5)
 		tx = int(screen_width // 2) - 50
 		ty = int(screen_height // 2)
-		input_box1 = InputBox(screen_width // 2 - 110, screen_height // 2 - 180, 140, 32)
+		input_box1 = InputBox(screen_width // 2 - 110, screen_height // 2 - 320, 140, 32)
 		input_boxes = [input_box1]
 		lvx = int(screen_width // 2) - 72
 		lvy = int(screen_height // 2) + 100
@@ -319,7 +321,7 @@ while run:
 		#game loop
 		while home:
 
-			screen.fill((202, 228, 241))
+			screen.blit(bg_home, (0, 0))
 
 			if start_button.draw(screen):
 				player_name = input_box1.text
@@ -329,22 +331,28 @@ while run:
 			if exit_button.draw(screen):
 				exit()
 			
-			# rendering a text written in
-			# this font
 			text = pygame.font.SysFont("Angsana New",35).render('วิธีการเล่น', True, white)
 			pygame.draw.rect(screen, (170,170,170),[tx - 24,ty + 2,140,40])
 			screen.blit(text , (tx,ty))
+
 			listview = pygame.font.SysFont("Angsana New", 35).render('ประวัติการเล่น', True, white)
 			pygame.draw.rect(screen, (170,170,170),[lvx - 24,lvy + 2,185,45])
 			screen.blit(listview , (lvx,lvy))
-			draw_text("รีเซ็ตคะแนน", font_def, dark, lvx + 20, lvy + 50)
-			draw_text("Insert Player Name", font_def, dark, screen_width // 2 - 110, screen_height // 2 - 210)
+
+			reset_score_text = font_def.render('รีเซ็ตคะแนน', True, white)
+			pygame.draw.rect(screen, (170,170,170),[lvx - 24,lvy + 50,185,45])
+			screen.blit(reset_score_text , (lvx + 22,lvy + 55))
+
+			reset_score_text = font_def.render('Insert Player Name', True, white)
+			pygame.draw.rect(screen, (170,170,170),[screen_width // 2 - 130,screen_height // 2 - 360,240,80])
+			screen.blit(reset_score_text , (screen_width // 2 - 110,screen_height // 2 - 350))
+			
 			for box in input_boxes:
 				box.update()
 
 			for box in input_boxes:
 				box.draw(screen)
-			
+
 			#event handler
 			for event in pygame.event.get():
 				#quit game
@@ -363,17 +371,6 @@ while run:
 				if event.type== pygame.MOUSEBUTTONDOWN and event.button == 1:
 					mouse=pygame.mouse.get_pos()
 					if mouse[0]in range ( lvx-24,lvx+130) and  mouse[1]in range ( lvy-2,lvy+50):
-						# root = tk.Tk()
-						# mlb = treectrl.MultiListbox(root)
-						# mlb.pack(side='top', fill='both', expand=1)
-						# tk.Button(root, text='Close', command=root.quit).pack(side='top', pady=5)
-						# mlb.focus_set()
-						# mlb.configure(selectcmd=select_cmd, selectmode='extended')
-						# mlb.config(columns=('Column 1', 'Column 2'))
-						# if os.path.isfile('score.txt'):
-						# 	with open('score.txt', 'r') as f:
-						# 		for line in f:
-						# 			mlb.insert('end', line.split(" "))
 						root = Tk()
 						root.resizable(width=False, height=False)
 						root.geometry('{}x{}'.format(150, 400))
