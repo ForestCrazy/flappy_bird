@@ -389,7 +389,6 @@ while run:
 								# box.pack()
 						root.mainloop()
 					if mouse[0]in range ( lvx+20,lvx+110) and  mouse[1]in range ( lvy+50,lvy+80):
-						print("c")
 						reset_score()
 						
 				for box in input_boxes:
