@@ -114,6 +114,10 @@ def get_score(player_name):
 				return int(line.split(" ")[0])
 	return 0
 
+def reset_score():
+	if os.path.isfile('score.txt'):
+		open('score.txt', 'w', encoding="utf-8").close()
+
 class Bird(pygame.sprite.Sprite):
 
 	def __init__(self, x, y):
@@ -333,6 +337,7 @@ while run:
 			listview = pygame.font.SysFont("Angsana New", 35).render('ประวัติการเล่น', True, white)
 			pygame.draw.rect(screen, (170,170,170),[lvx - 24,lvy + 2,185,45])
 			screen.blit(listview , (lvx,lvy))
+			draw_text("รีเซ็ตคะแนน", font_def, dark, lvx + 20, lvy + 50)
 			draw_text("Insert Player Name", font_def, dark, screen_width // 2 - 110, screen_height // 2 - 210)
 			for box in input_boxes:
 				box.update()
@@ -357,7 +362,7 @@ while run:
 						mainloop()
 				if event.type== pygame.MOUSEBUTTONDOWN and event.button == 1:
 					mouse=pygame.mouse.get_pos()
-					if mouse[0]in range ( lvx-24,lvx+130) and  mouse[1]in range ( lvy-2,lvy+80):
+					if mouse[0]in range ( lvx-24,lvx+130) and  mouse[1]in range ( lvy-2,lvy+50):
 						# root = tk.Tk()
 						# mlb = treectrl.MultiListbox(root)
 						# mlb.pack(side='top', fill='both', expand=1)
@@ -383,6 +388,10 @@ while run:
 									listbox.insert('end', "{:<8} {:>8}".format(*line.split(" "), sp=" " * 12))
 								# box.pack()
 						root.mainloop()
+					if mouse[0]in range ( lvx+20,lvx+110) and  mouse[1]in range ( lvy+50,lvy+80):
+						print("c")
+						reset_score()
+						
 				for box in input_boxes:
 					box.handle_event(event)
 
